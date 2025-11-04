@@ -5,7 +5,6 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework.views import APIView
-from rest_framework.permissions import AllowAny
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -86,3 +85,19 @@ class LoginView(APIView):
 
 
 
+class LogoutView(APIView):
+    """
+    takes the refresh token and blacklist for logout
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        try:
+            
+            refresh_token = request.data["refresh"]
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            return Response({"message": "Logged out successfully"}, status=status.HTTP_205_RESET_CONTENT)
+        
+        except Exception:
+            return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
