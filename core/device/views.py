@@ -4,26 +4,37 @@ from .serializers import DeviceSerializer,DeviceDetailedSerializer
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .utils import get_object
+from imei_authorization.models import AuthorizedIMEI
+
 
 class DeviceListCreateView(generics.ListCreateAPIView):
     """
-    users can create device objects.
-    only admin and staff can view all the devices
-    normal user can view there own devices only
+    Users can create device objects.
+    Only admin and staff can view all devices.
+    Normal users can view their own devices only.
+    Supports filtering by authorization status.
     """
     serializer_class = DeviceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_staff or user.is_superuser:
-            return Device.objects.all()
-        return Device.objects.filter(owner=user)
+        queryset = Device.objects.all() if (user.is_staff or user.is_superuser) else Device.objects.filter(owner=user)
+        
+        is_authorized = self.request.query_params.get('is_authorized')
+        if is_authorized is not None:
+            if is_authorized.lower() in ['true', '1']:
+                queryset = queryset.filter(is_authorized=True)
+            elif is_authorized.lower() in ['false', '0']:
+                queryset = queryset.filter(is_authorized=False)
+
+        return queryset
 
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
-
-
+        imei = serializer.validated_data.get('imei')
+        # check if IMEI exists in AuthorizedIMEI table
+        is_authorized = AuthorizedIMEI.objects.filter(imei=imei).exists()
+        serializer.save(owner=self.request.user, is_authorized=is_authorized)
 
 
 
