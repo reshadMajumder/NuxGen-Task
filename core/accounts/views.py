@@ -1,4 +1,3 @@
-# accounts/views.py
 from rest_framework import generics, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -9,7 +8,7 @@ from rest_framework.views import APIView
 class RegisterView(generics.CreateAPIView):
     """
     Register a normal user and return JWT tokens
-    as requirementys does not included the otp verification we will dirrectly register user send the refresh token 
+    as requirements does not included the otp verification we will dirrectly register user send the refresh token
     """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
