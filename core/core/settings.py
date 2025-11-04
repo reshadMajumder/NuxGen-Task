@@ -205,6 +205,8 @@ cloudinary.config(
 )
 
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+MEDIA_URL = '/media/'
 
 
+AUTH_USER_MODEL = 'accounts.User'
 
