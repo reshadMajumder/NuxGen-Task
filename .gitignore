@@ -28,4 +28,3 @@ pip-wheel-metadata/
 .pyre/
 .pytype/
 .ipynb_checkpoints/
-imei_authorization
