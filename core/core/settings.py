@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     'cloudinary_storage',
 
     'accounts',
+    'device',
+    'imei_authorization',
 ]
 
 MIDDLEWARE = [
