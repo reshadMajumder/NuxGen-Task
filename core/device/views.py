@@ -30,7 +30,7 @@ class DeviceListCreateView(generics.ListCreateAPIView):
 class DeviceDetailAPIView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    
+   
     def get(self, request, pk):
         device = get_object(pk, request.user)
         serializer = DeviceDetailedSerializer(device)

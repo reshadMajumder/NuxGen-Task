@@ -4,10 +4,17 @@ from accounts.serializers import UserSerializer
 
 class DeviceSerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False)
+    imei = serializers.CharField(required=True)
     class Meta:
         model = Device
-        fields = ['id', 'owner', 'name', 'type', 'os', 'description', 'image', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        fields = ['id', 'owner', 'name','imei', 'type', 'os', 'description','is_authorized', 'image', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'created_at','is_authorized', 'updated_at']
+
+    # imei should be unoque
+    def validate_imei(self, value):
+        if Device.objects.filter(imei=value).exists():
+            raise serializers.ValidationError("Device with this IMEI already exists.")
+        return value
 
 
 class DeviceDetailedSerializer(serializers.ModelSerializer):
@@ -16,5 +23,8 @@ class DeviceDetailedSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Device
-        fields = ['id', 'owner', 'name', 'type', 'os', 'description', 'image', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        fields = ['id', 'owner', 'name','imei', 'type', 'os','is_authorized', 'description', 'image', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'owner', 'created_at','is_authorized', 'updated_at']
+
+
+
