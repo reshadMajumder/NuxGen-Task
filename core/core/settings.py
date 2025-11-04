@@ -58,6 +58,7 @@ INSTALLED_APPS = [
 
     'accounts',
     'device',
+    'imei_authorization',
 ]
 
 MIDDLEWARE = [
