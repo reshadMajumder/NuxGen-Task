@@ -28,5 +28,5 @@ pip-wheel-metadata/
 .pyre/
 .pytype/
 .ipynb_checkpoints/
-migrations/
-!migrations/__init__.py
+
+accounts
