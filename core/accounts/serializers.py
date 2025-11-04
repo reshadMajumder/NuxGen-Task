@@ -22,3 +22,6 @@ class RegisterSerializer(serializers.ModelSerializer):
             image=validated_data.get('image', None),
         )
         return user
+
+
+
