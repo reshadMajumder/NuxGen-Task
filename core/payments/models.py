@@ -18,13 +18,17 @@ class Payment(models.Model):
     device = models.ForeignKey(Device, on_delete=models.CASCADE, related_name='payments')
     # amount = 15% of device.price, stored as Decimal
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING)
-    transaction_id = models.CharField(max_length=255, blank=True, null=True)  # gateway tran id / val_id
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default=STATUS_PENDING, db_index=True)
+    transaction_id = models.CharField(max_length=255, blank=True, null=True, db_index=True)  # gateway tran id / val_id
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'status']),
+            models.Index(fields=['device', 'status']),
+        ]
 
     def __str__(self):
         return f"Payment#{self.id} {self.user.email} - {self.device.imei} - {self.status}"

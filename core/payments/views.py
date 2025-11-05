@@ -32,6 +32,8 @@ class CreatePaymentView(generics.CreateAPIView):
             return Response({"detail": "Validation failed", "errors": serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         payment = serializer.save()
+        # Refetch with select_related 
+        payment = Payment.objects.select_related('user', 'device').get(id=payment.id)
 
         adapter = get_adapter('sslcommerz')
 
@@ -88,7 +90,7 @@ class PaymentWebhookView(APIView):
             return Response({"detail": "tran_id missing"}, status=400)
 
         try:
-            payment = Payment.objects.get(id=tran_id)
+            payment = Payment.objects.select_related('device').get(id=tran_id)
         except Payment.DoesNotExist:
             # logger.warning("Webhook for unknown payment %s", tran_id)
             return Response({"detail": "payment not found"}, status=404)
@@ -152,9 +154,9 @@ class PaymentsListView(generics.ListAPIView):
     def get_queryset(self):
         user = self.request.user
         if user.is_superuser or user.is_staff:
-            queryset = Payment.objects.all()
+            queryset = Payment.objects.select_related('user', 'device').all()
         else:
-            queryset = Payment.objects.filter(user=user)  # regular users can see only their payments
+            queryset = Payment.objects.select_related('user', 'device').filter(user=user)  # regular users can see only their payments
 
         status_param = self.request.query_params.get('status')
         if status_param:

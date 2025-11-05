@@ -19,7 +19,7 @@ class DeviceListCreateView(generics.ListCreateAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        queryset = Device.objects.all() if (user.is_staff or user.is_superuser) else Device.objects.filter(owner=user)
+        queryset = Device.objects.select_related('owner').all() if (user.is_staff or user.is_superuser) else Device.objects.select_related('owner').filter(owner=user)
         
         is_authorized = self.request.query_params.get('is_authorized')
         if is_authorized is not None:
