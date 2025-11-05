@@ -172,4 +172,16 @@ class ResendOTPView(APIView):
         return Response({"detail": "OTP resent successfully."}, status=status.HTTP_200_OK)
 
 
-# change password view
+""" we will implement later"""
+
+class ChangePasswordView(APIView):
+    pass
+
+class ForgotPasswordView(APIView):
+    pass
+
+class ResetPasswordView(APIView):
+    pass
+
+class PasswordResetConfirmView(APIView):
+    pass
