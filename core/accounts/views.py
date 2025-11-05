@@ -108,6 +108,9 @@ class LogoutView(APIView):
 
 
 class VerifyOTPView(APIView):
+    """
+    verify OTP and issue Tokens
+    """
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
@@ -142,8 +145,31 @@ class VerifyOTPView(APIView):
         }, status=status.HTTP_200_OK)
 
 
-        
-#resend otp view
+
+class ResendOTPView(APIView):
+    """
+    resend otp to the user email again with newly generated otp
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_code = generate_otp()
+        user.otp = otp_code
+        user.save()
+
+        otp_sender = EmailOTPAdapter()
+        otp_sender.send_otp(user, otp_code)
+
+        return Response({"detail": "OTP resent successfully."}, status=status.HTTP_200_OK)
 
 
 # change password view
