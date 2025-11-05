@@ -107,8 +107,43 @@ class LogoutView(APIView):
 
 
 
-#otp verification view
+class VerifyOTPView(APIView):
+    permission_classes = [permissions.AllowAny]
 
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+
+        if not email or not otp:
+            return Response({"detail": "Email and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.otp != otp:
+            return Response({"detail": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # OTP verified
+        user.otp = None
+        user.save()
+
+        # Issue JWT tokens now
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+
+        return Response({
+            "detail": "OTP verified successfully.",
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+        }, status=status.HTTP_200_OK)
+
+
+        
 #resend otp view
+
 
 # change password view
