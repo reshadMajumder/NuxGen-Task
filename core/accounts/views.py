@@ -4,11 +4,13 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
 from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework.views import APIView
+from .otp_adapter import EmailOTPAdapter
+from .utils import generate_otp
 
 class RegisterView(generics.CreateAPIView):
     """
-    Register a normal user and return JWT tokens
-    as requirements does not included the otp verification we will dirrectly register user send the refresh token
+    Register a normal user and send OTP via email.
+    Tokens will be issued only after OTP verification.
     """
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
@@ -19,22 +21,24 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Generate JWT tokens
-        refresh = RefreshToken.for_user(user)
-        access = refresh.access_token
+        # Generate and save OTP
+        otp_code = generate_otp()
+        user.otp = otp_code
+        user.save()
+
+        # Send OTP via email adapter
+        otp_sender = EmailOTPAdapter()
+        otp_sender.send_otp(user, otp_code)
 
         return Response({
-            "message": "Registration successful",
+            "message": "Registration successful. OTP sent to your email.",
             "user": {
                 "email": user.email,
                 "first_name": user.first_name,
                 "last_name": user.last_name,
-            },
-            "tokens": {
-                "refresh": str(refresh),
-                "access": str(access)
             }
         }, status=status.HTTP_201_CREATED)
+
 
 
 class ProfileView(generics.RetrieveUpdateAPIView):
@@ -100,3 +104,82 @@ class LogoutView(APIView):
         
         except Exception:
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class VerifyOTPView(APIView):
+    """
+    Verify OTP and issue JWT tokens.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        otp = request.data.get('otp')
+
+        if not email or not otp:
+            return Response({"detail": "Email and OTP are required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        if user.otp != otp:
+            return Response({"detail": "Invalid OTP."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # OTP verified
+        user.otp = None
+        user.is_email_verified = True  # mark email as verified
+        user.save()
+
+        # Issue JWT tokens now
+        refresh = RefreshToken.for_user(user)
+        access = refresh.access_token
+
+        return Response({
+            "detail": "OTP verified successfully.",
+            "tokens": {
+                "refresh": str(refresh),
+                "access": str(access)
+            }
+        }, status=status.HTTP_200_OK)
+
+class ResendOTPView(APIView):
+    """
+    resend otp to the user email again with newly generated otp
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        otp_code = generate_otp()
+        user.otp = otp_code
+        user.save()
+
+        otp_sender = EmailOTPAdapter()
+        otp_sender.send_otp(user, otp_code)
+
+        return Response({"detail": "OTP resent successfully."}, status=status.HTTP_200_OK)
+
+
+""" we will implement later"""
+
+class ChangePasswordView(APIView):
+    pass
+
+class ForgotPasswordView(APIView):
+    pass
+
+class ResetPasswordView(APIView):
+    pass
+
+class PasswordResetConfirmView(APIView):
+    pass
