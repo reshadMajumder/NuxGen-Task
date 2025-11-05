@@ -36,7 +36,6 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'email', 'first_name', 'last_name', 'phone', 'address', 'image']
         read_only_fields = ['id', 'email']
 
-
 class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
@@ -45,12 +44,15 @@ class LoginSerializer(serializers.Serializer):
         email = data.get('email')
         password = data.get('password')
 
-        if email and password:
-            user = authenticate(email=email, password=password)
-            if not user:
-                raise serializers.ValidationError("Invalid email or password.")
-        else:
+        if not email or not password:
             raise serializers.ValidationError("Email and password are required.")
+
+        user = authenticate(email=email, password=password)
+        if not user:
+            raise serializers.ValidationError("Invalid email or password.")
+
+        if not user.is_email_verified:
+            raise serializers.ValidationError("Email not verified. Please verify your email first.")
 
         data['user'] = user
         return data
