@@ -21,6 +21,14 @@ The project is designed in an extensible way using **Adapter Pattern** for both 
 
 ---
 
+## Additional Resources
+
+- **ERD**: https://drive.google.com/file/d/1txxSbk_9ONj38RVabBRO8yeWkYph-jsL/view?usp=sharing
+- **Flow Chart** : https://www.mermaidchart.com/d/991a4c7e-a47f-4d58-b9fd-2ba6c30c15a4
+- **SRS Document**: https://drive.google.com/file/d/1GAZd-qEzI8IJ7bGIjz6YuhAUi8z1ZJLp/view?usp=sharing
+- **Postman API Documentation**: https://drive.google.com/file/d/19OQYZlDQ9GagWKzkY-_Gfo8ZqW-t4vFw/view?usp=sharing
+
+
 ## Architecture
 
 | Module              | Responsibilities                                  |
@@ -334,12 +342,4 @@ Required environment variables for `.env` file:
 MIT License © 2025
 
 ---
-
-## Additional Resources
-
-- **ERD**: [Place ERD diagram here]
-- **SRS Document**: [Place SRS document link here]
-- **API Documentation**: [Place Postman collection link here]
-
-
 
