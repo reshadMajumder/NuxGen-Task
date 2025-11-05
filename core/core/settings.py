@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     'accounts',
     'device',
     'imei_authorization',
+    'payments',
 ]
 
 MIDDLEWARE = [
@@ -219,3 +220,11 @@ EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', default=True)
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+SSL_STORE_ID = os.getenv('SSL_STORE_ID')
+SSL_STORE_PASSWORD = os.getenv('SSL_STORE_PASSWORD')
+SSL_SANDBOX_URL = os.getenv('SSL_SANDBOX_URL')
+
+
+
+# Public domain (used for success/fail/ipn urls). During dev use ngrok HTTPS URL.
+PUBLIC_DOMAIN = os.getenv('PUBLIC_DOMAIN')

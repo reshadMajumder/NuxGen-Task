@@ -7,6 +7,7 @@ class Device(models.Model):
     name = models.CharField(max_length=100)
     imei = models.CharField(max_length=50, unique=True,blank=True, null=True)
     type = models.CharField(max_length=50, blank=True, null=True)
+    price=models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     os = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     image = CloudinaryField('device_image', blank=True, null=True)
