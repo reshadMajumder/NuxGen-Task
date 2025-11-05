@@ -6,6 +6,7 @@ from .serializers import RegisterSerializer, UserSerializer, LoginSerializer
 from rest_framework.views import APIView
 from .otp_adapter import EmailOTPAdapter
 from .utils import generate_otp
+from core.throttles import AuthRateThrottle, OTPRateThrottle
 
 class RegisterView(generics.CreateAPIView):
     """
@@ -15,6 +16,7 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -59,6 +61,7 @@ class LoginView(APIView):
     
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]
 
     def post(self, request):
         try:
@@ -111,6 +114,7 @@ class VerifyOTPView(APIView):
     Verify OTP and issue JWT tokens.
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [OTPRateThrottle]
 
     def post(self, request):
         email = request.data.get('email')
@@ -149,6 +153,7 @@ class ResendOTPView(APIView):
     resend otp to the user email again with newly generated otp
     """
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [OTPRateThrottle]
 
     def post(self, request):
         email = request.data.get('email')

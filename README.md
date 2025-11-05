@@ -74,6 +74,43 @@ The platform includes optimized database queries with:
 
 ---
 
+## API Features
+
+### Pagination
+
+All list endpoints return paginated results with 20 items per page. Response format:
+
+```json
+{
+  "count": 100,
+  "next": "http://api/v1/device/?page=2",
+  "previous": null,
+  "results": [...]
+}
+```
+
+Use `?page=<number>` query parameter to navigate pages.
+
+### Rate Limiting
+
+The API implements rate limiting to prevent abuse:
+
+| User Type | Rate Limit |
+|-----------|------------|
+| Anonymous | 100 requests/hour |
+| Authenticated | 1000 requests/day |
+| Auth endpoints (register/login) | 5 requests/hour |
+| OTP endpoints (verify/resend) | 3 requests/hour |
+
+When rate limit is exceeded, API returns `429 Too Many Requests` with details:
+```json
+{
+  "detail": "Request was throttled. Expected available in 3456 seconds."
+}
+```
+
+---
+
 ## API Endpoints
 
 ### Authentication (`/api/v1/accounts/`)
@@ -89,7 +126,7 @@ The platform includes optimized database queries with:
 
 ### Devices (`/api/v1/device/`)
 
-- `GET /` - List devices (filter by `is_authorized` query param)
+- `GET /` - List devices (filter by `is_authorized` query param, paginated)
 - `POST /` - Create new device
 - `GET /<id>/` - Get device details
 - `PUT /<id>/` - Update device
@@ -98,15 +135,15 @@ The platform includes optimized database queries with:
 ### Payments (`/api/v1/payments/`)
 
 - `POST /create/` - Create payment (requires `device_id`)
-- `GET /list/` - List payments (filter by `status`, `device_id`, `user_id`)
-- `POST /webhook/` - Payment webhook (SSLCommerz callback)
+- `GET /list/` - List payments (filter by `status`, `device_id`, `user_id`, paginated)
+- `POST /webhook/` - Payment webhook (SSLCommerz callback, no throttling)
 - `GET /success/` - Payment success page
 - `GET /fail/` - Payment failure page
 - `GET /cancel/` - Payment cancellation page
 
 ### IMEI Authorization (`/api/v1/imei/`)
 
-- `GET /` - List authorized IMEIs (Admin/Staff only)
+- `GET /` - List authorized IMEIs (Admin/Staff only, paginated)
 - `POST /` - Add authorized IMEI (Admin/Staff only)
 - `DELETE /<id>/` - Delete authorized IMEI (Admin only)
 
@@ -150,6 +187,15 @@ The platform includes optimized database queries with:
 - Role-based endpoint permissions
 - Token blacklisting on logout
 - CORS configuration for API access
+
+### 6. API Performance & Protection
+
+- **Pagination**: All list endpoints paginated (20 items per page)
+- **Rate Limiting**: Built-in throttling to prevent abuse
+  - Anonymous users: 100 requests/hour
+  - Authenticated users: 1000 requests/day
+  - Authentication endpoints (register/login): 5 requests/hour
+  - OTP endpoints (verify/resend): 3 requests/hour
 
 ---
 
