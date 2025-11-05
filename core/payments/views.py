@@ -32,6 +32,8 @@ class CreatePaymentView(generics.CreateAPIView):
             return Response({"detail": "Validation failed", "errors": serializer.errors},
                             status=status.HTTP_400_BAD_REQUEST)
         payment = serializer.save()
+        # Refetch with select_related 
+        payment = Payment.objects.select_related('user', 'device').get(id=payment.id)
 
         adapter = get_adapter('sslcommerz')
 
