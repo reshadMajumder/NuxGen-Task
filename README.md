@@ -8,195 +8,287 @@ A modular device authorization platform with OTP-based email verification and pa
 
 Nux Device API enables:
 
-- User registration + OTP verification (pluggable adapters → Email / SMS / WhatsApp / etc.)
-- Secure JWT login
-- Device add/edit/delete
-- Payment initiation (only pay 15% of device price)
-- Automatic device authorization after successful payment callback (webhook)
+- User registration with OTP verification (pluggable adapters → Email / SMS / WhatsApp / etc.)
+- Secure JWT authentication with token refresh
+- Device CRUD operations with authorization workflow
+- Payment processing (15% of device price for authorization)
+- Automatic device authorization via webhook callbacks
+- Role-based access control (Admin, Staff, User)
 
-The project is designed in an extensible way using **Adapter Pattern** both for OTP sending & Payment integration.
+The project is designed in an extensible way using **Adapter Pattern** for both OTP sending and Payment integration.
 
 ---
 
 ## Architecture
 
-| Module   | Responsibilities |
-|----------|-----------------|
-| `accounts` | Custom user model, OTP sending, JWT authentication |
-| `device`   | Device CRUD, device authorization, authorized IMEI management |
-| `payments` | Payment logic, gateway calling, webhook, adapters |
+| Module              | Responsibilities                                  |
+|---------------------|---------------------------------------------------|
+| `accounts`          | Custom user model, OTP sending, JWT authentication |
+| `device`            | Device CRUD, device authorization, IMEI management |
+| `payments`          | Payment logic, gateway integration, webhook handling |
+| `imei_authorization`| Authorized IMEI management (Admin/Staff only)     |
 
-We keep each concern inside separate Django Apps for maintainability and scalability.
+Each module is a separate Django app for maintainability and scalability.
 
 ---
 
-## Design Patterns Used (Core System Architecture)
+## Technology Stack
 
-Both OTP and Payment modules are fully designed using **Adapter Pattern**.
-So we can easily add new providers in the future by creating a new adapter class
-without touching the main business logic.
+- **Backend**: Django 5.2.4, Django REST Framework 3.16.0
+- **Authentication**: JWT (SimpleJWT 5.5.0)
+- **Database**: SQLite (dev) / PostgreSQL (production)
+- **File Storage**: Cloudinary
+- **Payment Gateway**: SSLCommerz (Adapter Pattern)
+- **CORS**: django-cors-headers
+- **Server**: Gunicorn
 
-| Module   | Feature               | Pattern          | Why |
-|----------|---------------------|----------------|-----|
-| accounts | OTP sending           | Adapter Pattern | Send OTP via Email / SMS / WhatsApp / Firebase / Twilio by just switching adapter |
-| payments | Gateway Integration   | Adapter Pattern | Switch between SSLCommerz → Nagad → bKash → Stripe with zero code change on main views |
+---
+
+## Design Patterns
+
+Both OTP and Payment modules use the **Adapter Pattern** for extensibility.
+
+| Module   | Feature             | Pattern        | Benefits                                      |
+|----------|---------------------|----------------|-----------------------------------------------|
+| accounts | OTP sending         | Adapter Pattern| Switch between Email / SMS / WhatsApp easily  |
+| payments | Gateway Integration | Adapter Pattern| Switch between SSLCommerz / Nagad / bKash / Stripe without code changes |
 
 **Currently Active Adapters**
 
 - `EmailOTPAdapter` → sends OTP via Email
 - `SSLCommerzAdapter` → initializes payment with SSLCommerz sandbox gateway
 
-**Future Adapters (plug-in easily)**
+**Future Adapters** (plug-in easily)
 
-- `NagadAdapter`
-- `bKashAdapter`
-- `StripeAdapter`
-- `PaypalAdapter`
-
-
-ERD
-
-> ERD will be placed here
-
-
-
-(Place ERD diagram image here)
-
+- `NagadAdapter`, `bKashAdapter`, `StripeAdapter`, `PaypalAdapter`
 
 ---
 
-SRS Document
+## Database Optimization
 
-> Full SRS Document
+The platform includes optimized database queries with:
 
-
-
-(Place your SRS Google Doc link / PDF link here)
-
-
----
-
-API Documentation
-
-> POSTMAN API Documentation
-
-
-
-(Place Postman public share link here)
-
+- **Indexes**: Strategic indexes on frequently queried fields (`is_email_verified`, `is_authorized`, `status`, `created_at`)
+- **Composite Indexes**: Multi-field indexes for common filter combinations
+- **Query Optimization**: `select_related()` for ForeignKey relationships to prevent N+1 queries
 
 ---
 
-Features
+## API Endpoints
 
-1. User Management
+### Authentication (`/api/v1/accounts/`)
 
-Register with email and password
+- `POST /register/` - User registration (sends OTP)
+- `POST /verify-otp/` - Verify OTP and receive JWT tokens
+- `POST /resend-otp/` - Resend OTP to email
+- `POST /login/` - User login (returns JWT tokens)
+- `POST /logout/` - Logout (blacklist refresh token)
+- `GET /token/refresh/` - Refresh access token
+- `GET /profile/` - Get user profile (authenticated)
+- `PUT /profile/` - Update user profile (authenticated)
 
-OTP verification (adapter pattern)
+### Devices (`/api/v1/device/`)
 
-Login / Logout with JWT
+- `GET /` - List devices (filter by `is_authorized` query param)
+- `POST /` - Create new device
+- `GET /<id>/` - Get device details
+- `PUT /<id>/` - Update device
+- `DELETE /<id>/` - Delete device
 
-Profile view & update
+### Payments (`/api/v1/payments/`)
 
+- `POST /create/` - Create payment (requires `device_id`)
+- `GET /list/` - List payments (filter by `status`, `device_id`, `user_id`)
+- `POST /webhook/` - Payment webhook (SSLCommerz callback)
+- `GET /success/` - Payment success page
+- `GET /fail/` - Payment failure page
+- `GET /cancel/` - Payment cancellation page
 
+### IMEI Authorization (`/api/v1/imei/`)
 
-2. Role-Based Access
-
-Admin, Staff, User
-
-Admin can manage all users, devices, payments
-
-Staff can manage devices & view payments
-
-Users can only manage their own devices and payments
-
-
-
-3. Device Management
-
-Add / Edit / Delete device
-
-Authorized IMEI check
-
-Only pay 15% of device price for authorization
-
-Admin/Staff can add authorized IMEI numbers
-
-
-
-4. Payment System
-
-Initiate payment via SSLCommerz (Adapter)
-
-Webhook endpoint for automatic payment verification
-
-Device automatically marked as authorized after successful payment
-
-
-
-5. Security
-
-JWT token authentication
-
-OTP verification before issuing tokens
-
-Role-based endpoint permissions
-
-Webhook endpoint open only for gateway calls
-
-
-
-
+- `GET /` - List authorized IMEIs (Admin/Staff only)
+- `POST /` - Add authorized IMEI (Admin/Staff only)
+- `DELETE /<id>/` - Delete authorized IMEI (Admin only)
 
 ---
 
-Installation & Setup
+## Features
 
-git clone <repo_url>
-cd <root_folder>
-pip install -r requirements.txt
+### 1. User Management
 
-fill your credentials inside .env (EMAIL_HOST, EMAIL_PORT, SSL_STORE_ID, etc.)
+- Registration with email and password
+- OTP verification via email (adapter pattern)
+- JWT-based authentication with refresh tokens
+- Profile management (view and update)
+- Email verification required before login
 
-python manage.py migrate
-python manage.py runserver
+### 2. Role-Based Access Control
 
-Postman Collection
+- **Admin**: Full access to all resources
+- **Staff**: Can manage devices and view payments
+- **User**: Can only manage their own devices and payments
 
-> Import this Postman collection to test APIs
+### 3. Device Management
 
+- Add, edit, delete devices
+- Automatic IMEI authorization check on creation
+- Filter devices by authorization status
+- Device ownership validation
 
+### 4. Payment System
 
-(Place Postman public share link here)
+- Initiate payment (15% of device price)
+- SSLCommerz gateway integration (adapter pattern)
+- Webhook endpoint for automatic verification
+- Device automatically authorized after successful payment
+- Payment status tracking (pending, success, failed)
 
+### 5. Security
+
+- JWT token authentication
+- OTP verification before token issuance
+- Role-based endpoint permissions
+- Token blacklisting on logout
+- CORS configuration for API access
 
 ---
 
-Contributing
+## Installation & Setup
 
-Use Adapter Pattern for any new OTP or Payment integrations.
+### Prerequisites
 
-Follow modular app structure (accounts, device, payments).
+- Python 3.8+
+- PostgreSQL (for production)
+- Cloudinary account (for file storage)
+- SSLCommerz account (for payments)
+- SMTP server credentials (for email)
 
-Write unit tests for any new functionality.
+### Steps
 
-Ensure environment variables are used instead of hardcoding credentials.
+1. **Clone the repository**
+   ```bash
+   git clone <repo_url>
+   cd NuxGen/core
+   ```
 
+2. **Create virtual environment**
+   ```bash
+   python -m venv env
+   source env/bin/activate  # On Windows: env\Scripts\activate
+   ```
 
+3. **Install dependencies**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Create `.env` file**
+   ```env
+   # Django Settings
+   SECRET_KEY=your-secret-key
+   DEBUG=True
+   ALLOWED_HOSTS=localhost,127.0.0.1
+
+   # Database (Production)
+   DB_NAME=your_db_name
+   DB_USER=your_db_user
+   DB_PASSWORD=your_db_password
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_SSLMODE=require
+
+   # Email Configuration
+   EMAIL_HOST=smtp.gmail.com
+   EMAIL_PORT=587
+   EMAIL_HOST_USER=your-email@gmail.com
+   EMAIL_HOST_PASSWORD=your-app-password
+   EMAIL_USE_TLS=True
+
+   # Cloudinary
+   cloud_name=your-cloud-name
+   api_key=your-api-key
+   api_secret=your-api-secret
+
+   # SSLCommerz
+   SSL_STORE_ID=your-store-id
+   SSL_STORE_PASSWORD=your-store-password
+   SSL_SANDBOX_URL=https://sandbox.sslcommerz.com/gwprocess/v4/api.php
+
+   # Public Domain (use ngrok HTTPS URL in development)
+   PUBLIC_DOMAIN=https://your-domain.com
+   ```
+
+5. **Run migrations**
+   ```bash
+   python manage.py migrate
+   ```
+
+6. **Create superuser** (optional)
+   ```bash
+   python manage.py createsuperuser
+   ```
+
+7. **Run development server**
+   ```bash
+   python manage.py runserver
+   ```
+
+The API will be available at `http://localhost:8000/api/v1/`
 
 ---
 
-License
+## Environment Variables
+
+Required environment variables for `.env` file:
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `SECRET_KEY` | Django secret key | Generated key |
+| `DEBUG` | Debug mode | `True` or `False` |
+| `ALLOWED_HOSTS` | Allowed hosts | `localhost,127.0.0.1` |
+| `EMAIL_HOST` | SMTP server | `smtp.gmail.com` |
+| `EMAIL_PORT` | SMTP port | `587` |
+| `EMAIL_HOST_USER` | Email address | `your-email@gmail.com` |
+| `EMAIL_HOST_PASSWORD` | Email password/app password | `your-password` |
+| `cloud_name` | Cloudinary cloud name | `your-cloud-name` |
+| `api_key` | Cloudinary API key | `your-api-key` |
+| `api_secret` | Cloudinary API secret | `your-api-secret` |
+| `SSL_STORE_ID` | SSLCommerz store ID | `your-store-id` |
+| `SSL_STORE_PASSWORD` | SSLCommerz store password | `your-store-password` |
+| `PUBLIC_DOMAIN` | Public domain for webhooks | `https://your-domain.com` |
+
+---
+
+## Workflow
+
+1. **User Registration**: User registers → OTP sent via email
+2. **OTP Verification**: User verifies OTP → JWT tokens issued
+3. **Device Creation**: User adds device → IMEI checked against authorized list
+4. **Payment Initiation**: User creates payment → Redirected to SSLCommerz
+5. **Payment Webhook**: SSLCommerz calls webhook → Device auto-authorized
+6. **Device Management**: User can manage their authorized devices
+
+---
+
+## Contributing
+
+1. Use Adapter Pattern for new OTP or Payment integrations
+2. Follow modular app structure (accounts, device, payments, imei_authorization)
+3. Write unit tests for new functionality
+4. Use environment variables instead of hardcoding credentials
+5. Follow Django REST Framework best practices
+6. Optimize database queries with `select_related()` and `prefetch_related()`
+
+---
+
+## License
 
 MIT License © 2025
 
-This README is **complete, modular, and copy-paste ready**.  
-It clearly mentions:
-
-- OTP & Payment adapters  
-- Device authorization workflow  
-- Placeholders for ERD, SRS, Postman  
-- Installation and `.env` setup  
-
 ---
+
+## Additional Resources
+
+- **ERD**: [Place ERD diagram here]
+- **SRS Document**: [Place SRS document link here]
+- **API Documentation**: [Place Postman collection link here]
