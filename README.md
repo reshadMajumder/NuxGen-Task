@@ -2,6 +2,8 @@
 
 A modular device authorization platform with OTP-based email verification and payment gateway integration using **Adapter Design Pattern**.
 
+<img width="703" height="1014" alt="activity -nuxgen drawio" src="https://github.com/user-attachments/assets/31e10b61-5d1c-48e2-a5f0-14266757a1b8" />
+
 ---
 
 ## Overview
@@ -343,5 +345,6 @@ Required environment variables for `.env` file:
 MIT License © 2025
 
 ---
+
 
 
