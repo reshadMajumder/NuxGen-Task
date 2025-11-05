@@ -8,7 +8,7 @@ def get_object(pk, user):
     helper function for role based object task 
     """
     try:
-        device = Device.objects.get(pk=pk)
+        device = Device.objects.select_related('owner').get(pk=pk)
     except Device.DoesNotExist:
         raise NotFound("Device not found")
 

@@ -35,7 +35,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     address = models.TextField(blank=True, null=True)
     image = CloudinaryField('profile_image', blank=True, null=True)
     otp = models.CharField(max_length=6, blank=True, null=True) # otp expire feature will be implemented later
-    is_email_verified = models.BooleanField(default=False)
+    is_email_verified = models.BooleanField(default=False, db_index=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)

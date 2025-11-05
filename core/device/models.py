@@ -11,13 +11,16 @@ class Device(models.Model):
     os = models.CharField(max_length=50, blank=True, null=True)
     description = models.TextField(blank=True, null=True)
     image = CloudinaryField('device_image', blank=True, null=True)
-    is_authorized= models.BooleanField(default=False)
+    is_authorized= models.BooleanField(default=False, db_index=True)
 
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['owner', 'is_authorized']),
+        ]
 
     def __str__(self):
         return f"{self.name} - {self.owner.email}"
