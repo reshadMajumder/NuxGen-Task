@@ -22,5 +22,6 @@ urlpatterns = [
     path('api/v1/accounts/', include('accounts.urls')),
     path('api/v1/device/', include('device.urls')),
     path('api/v1/imei/', include('imei_authorization.urls')),
+    path('api/v1/payments/', include('payments.urls')),
 
 ]
