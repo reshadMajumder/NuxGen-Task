@@ -2,6 +2,7 @@ from rest_framework import serializers
 from .models import Payment
 from device.models import Device
 from decimal import Decimal
+from device.serializers import DeviceSerializer
 
 class CreatePaymentSerializer(serializers.ModelSerializer):
     device_id = serializers.IntegerField(write_only=True)
@@ -27,3 +28,10 @@ class CreatePaymentSerializer(serializers.ModelSerializer):
         amount = Payment.calculate_fee_for_device(device)  # 15% of device price
         payment = Payment.objects.create(user=user, device=device, amount=amount, status=Payment.STATUS_PENDING)
         return payment
+
+class PaymentDetailSerializer(serializers.ModelSerializer):
+    device = DeviceSerializer()
+
+    class Meta:
+        model = Payment
+        fields = ['id', 'device', 'amount', 'status', 'transaction_id', 'created_at']

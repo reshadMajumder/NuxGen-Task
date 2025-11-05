@@ -7,11 +7,12 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from .serializers import CreatePaymentSerializer
+from .serializers import CreatePaymentSerializer,PaymentDetailSerializer
 from .models import Payment
 from .services import get_adapter
 from imei_authorization.models import AuthorizedIMEI
 from decimal import Decimal
+from core.permissions import IsAdmin, IsStaff
 # import logging
 
 # logger = logging.getLogger(__name__)
@@ -136,3 +137,32 @@ class PaymentCancelView(generics.GenericAPIView):
     permission_classes = [AllowAny]
     def get(self, request, *args, **kwargs):
         return Response({"detail": "payment canceled"}, status=200)
+
+
+
+class PaymentsListView(generics.ListAPIView):
+    """
+    Admins and Staff can view all payments.
+    User can view their payments
+    Added filtering by status, user, or device.
+    """
+    serializer_class = PaymentDetailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_superuser or user.is_staff:
+            queryset = Payment.objects.all()
+        else:
+            queryset = Payment.objects.filter(user=user)  # regular users can see only their payments
+
+        status_param = self.request.query_params.get('status')
+        if status_param:
+            queryset = queryset.filter(status=status_param)
+        device_id = self.request.query_params.get('device_id')
+        if device_id:
+            queryset = queryset.filter(device_id=device_id)
+        user_id = self.request.query_params.get('user_id')
+        if user_id:
+            queryset = queryset.filter(user_id=user_id)
+        return queryset
