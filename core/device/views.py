@@ -39,6 +39,14 @@ class DeviceListCreateView(generics.ListCreateAPIView):
 
 
 class DeviceDetailAPIView(APIView):
+    """
+    API View to retrieve, update, or delete a single Device.
+    Permissions:
+    - Only authenticated users can access.
+    - Normal users can only access their own devices.
+    - Staff/Admin can access all devices.
+
+    """
     permission_classes = [permissions.IsAuthenticated]
 
    
