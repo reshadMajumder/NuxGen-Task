@@ -16,6 +16,7 @@ Nux Device API enables:
 - Role-based access control (Admin, Staff, User)
 
 The project is designed in an extensible way using **Adapter Pattern** for both OTP sending and Payment integration.
+NOTE: no async support, redis caching added here.
 
 ---
 
@@ -338,4 +339,5 @@ MIT License © 2025
 - **ERD**: [Place ERD diagram here]
 - **SRS Document**: [Place SRS document link here]
 - **API Documentation**: [Place Postman collection link here]
+
 
