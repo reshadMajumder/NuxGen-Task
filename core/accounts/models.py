@@ -9,7 +9,6 @@ class CustomUserManager(BaseUserManager):
         email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
-        # use extra_fields values if provided
         user.is_staff = extra_fields.get('is_staff', False)
         user.is_superuser = extra_fields.get('is_superuser', False)
         user.save(using=self._db)
@@ -35,7 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(max_length=15, blank=True, null=True)
     address = models.TextField(blank=True, null=True)
     image = CloudinaryField('profile_image', blank=True, null=True)
-
+    otp = models.CharField(max_length=6, blank=True, null=True)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     is_superuser = models.BooleanField(default=False)
