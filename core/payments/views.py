@@ -76,6 +76,7 @@ class PaymentWebhookView(APIView):
     SSLCommerz will POST to this endpoint. No authentication (AllowAny).
     """
     permission_classes = [AllowAny]
+    throttle_classes = []  # Disable throttling for webhook (external service)
 
     def post(self, request, *args, **kwargs):
         data = request.data or request.POST.dict()
