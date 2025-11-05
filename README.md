@@ -214,7 +214,7 @@ When rate limit is exceeded, API returns `429 Too Many Requests` with details:
 1. **Clone the repository**
    ```bash
    git clone <repo_url>
-   cd NuxGen/core
+   cd NuxGen-task/core
    ```
 
 2. **Create virtual environment**
@@ -338,3 +338,4 @@ MIT License © 2025
 - **ERD**: [Place ERD diagram here]
 - **SRS Document**: [Place SRS document link here]
 - **API Documentation**: [Place Postman collection link here]
+
