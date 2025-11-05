@@ -106,10 +106,9 @@ class LogoutView(APIView):
             return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class VerifyOTPView(APIView):
     """
-    verify OTP and issue Tokens
+    Verify OTP and issue JWT tokens.
     """
     permission_classes = [permissions.AllowAny]
 
@@ -130,6 +129,7 @@ class VerifyOTPView(APIView):
 
         # OTP verified
         user.otp = None
+        user.is_email_verified = True  # mark email as verified
         user.save()
 
         # Issue JWT tokens now
@@ -143,8 +143,6 @@ class VerifyOTPView(APIView):
                 "access": str(access)
             }
         }, status=status.HTTP_200_OK)
-
-
 
 class ResendOTPView(APIView):
     """
